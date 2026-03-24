@@ -1,11 +1,13 @@
 name: Build
 
 on:
+  workflow_dispatch:
   release:
     types: [published]
   push:
     branches:
       - main
+      - windows-support
   pull_request:
 
 jobs:
