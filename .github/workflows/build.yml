@@ -189,6 +189,62 @@ jobs:
           zip -r rapidsnark-linux-x86_64-noasm-${{ github.ref_name }}.zip rapidsnark-linux-x86_64-noasm-${{ github.ref_name }}
           gh release upload ${{ github.event.release.tag_name }} rapidsnark-linux-x86_64-noasm-${{ github.ref_name }}.zip
 
+  build-windows-x86_64:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake make m4 diffutils tar xz curl
+
+      - name: Cache gmp build
+        uses: actions/cache@v4
+        with:
+          path: |
+            depends/gmp
+            depends/gmp-6.3.0.tar.xz
+          key: ${{ runner.os }}-${{ runner.arch }}-gmp-${{ hashFiles('build_gmp.sh') }}
+
+      - name: Build gmp for Windows
+        run: if [[ ! -d "depends/gmp/package" ]]; then ./build_gmp.sh windows; fi
+
+      - name: Build prover Windows x86_64
+        run: make windows_x86_64
+
+      - name: Test rapidsnark
+        run: |
+          set -x
+          set -e
+          time package_windows_x86_64/bin/prover.exe testdata/circuit_final.zkey testdata/witness.wtns proof.json public.json
+          time package_windows_x86_64/bin/verifier.exe testdata/verification_key.json public.json proof.json
+
+      - name: Upload Windows x86_64 dev artifacts
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapidsnark-windows-x86_64
+          path: |
+            package_windows_x86_64
+          if-no-files-found: error
+
+      - name: Upload Windows x86_64 release artifacts
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -x
+          mkdir -p rapidsnark-windows-x86_64-${{ github.ref_name }}
+          cp -r package_windows_x86_64/* rapidsnark-windows-x86_64-${{ github.ref_name }}/
+          zip -r rapidsnark-windows-x86_64-${{ github.ref_name }}.zip rapidsnark-windows-x86_64-${{ github.ref_name }}
+          gh release upload ${{ github.event.release.tag_name }} rapidsnark-windows-x86_64-${{ github.ref_name }}.zip
+
   build-linux-arm64:
     runs-on: ubuntu-24.04-arm
     steps:
