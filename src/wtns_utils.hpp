@@ -2,6 +2,7 @@
 #define WTNS_UTILS
 
 #include <gmp.h>
+#include <cstdint>
 
 #include "binfile_utils.hpp"
 
@@ -9,10 +10,10 @@ namespace WtnsUtils {
 
     class Header {
     public:
-        u_int32_t n8;
+        uint32_t n8;
         mpz_t prime;
 
-        u_int32_t nVars;
+        uint32_t nVars;
 
         Header();
         ~Header();

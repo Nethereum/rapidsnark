@@ -86,7 +86,7 @@ BuildPublicString(AltBn128::FrElement *wtnsData, uint32_t nPublic)
 {
     json jsonPublic;
     AltBn128::FrElement aux;
-    for (u_int32_t i=1; i<= nPublic; i++) {
+    for (uint32_t i=1; i<= nPublic; i++) {
         AltBn128::Fr.toMontgomery(aux, wtnsData[i]);
         jsonPublic.push_back(AltBn128::Fr.toString(aux));
     }

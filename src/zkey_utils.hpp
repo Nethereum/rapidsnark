@@ -2,6 +2,7 @@
 #define ZKEY_UTILS_H
 
 #include <gmp.h>
+#include <cstdint>
 #include <memory>
 
 #include "binfile_utils.hpp"
@@ -12,15 +13,15 @@ namespace ZKeyUtils {
 
 
     public:
-        u_int32_t n8q;
+        uint32_t n8q;
         mpz_t qPrime;
-        u_int32_t n8r;
+        uint32_t n8r;
         mpz_t rPrime;
 
-        u_int32_t nVars;
-        u_int32_t nPublic;
-        u_int32_t domainSize;
-        u_int64_t nCoefs;
+        uint32_t nVars;
+        uint32_t nPublic;
+        uint32_t domainSize;
+        uint64_t nCoefs;
 
         void *vk_alpha1;
         void *vk_beta1;

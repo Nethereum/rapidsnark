@@ -66,6 +66,15 @@ macos_x86_64:
 		cmake .. -DTARGET_PLATFORM=macos_x86_64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package_macos_x86_64 && \
 		make -j$(nproc) -vvv && make install
 
+windows_x86_64:
+	rm -rf build_prover_windows_x86_64 && mkdir build_prover_windows_x86_64 && cd build_prover_windows_x86_64 && \
+	cmake .. -G "MSYS Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package_windows_x86_64 \
+		-DUSE_ASM=NO -DUSE_OPENMP=OFF -DBUILD_TESTS=OFF \
+		-DCMAKE_CXX_FLAGS="-Duint=unsigned -std=c++17" \
+		-DCMAKE_C_FLAGS="-std=gnu17 -Duint=unsigned" \
+		-DCMAKE_SHARED_LINKER_FLAGS="-static-libgcc -static-libstdc++ -static" && \
+	make -j$$(nproc) && make install
+
 clean:
 	rm -rf build_prover \
 		build_prover_macos_arm64 \
@@ -74,6 +83,7 @@ clean:
 		build_prover_android_x86_64 \
 		build_prover_ios \
 		build_prover_ios_simulator \
+		build_prover_windows_x86_64 \
 		package \
 		package_macos_arm64 \
 		package_macos_x86_64 \
@@ -81,6 +91,7 @@ clean:
 		package_android_x86_64 \
 		package_ios \
 		package_ios_simulator \
+		package_windows_x86_64 \
 		depends/gmp/package \
 		depends/gmp/package_macos_arm64 \
 		depends/gmp/package_macos_x86_64 \

@@ -19,6 +19,7 @@ usage()
     echo "    host:           build for this host"
     echo "    host_noasm:     build for this host without asm optimizations (e.g. needed for macOS)"
     echo "    aarch64:        build for Linux aarch64"
+    echo "    windows:        build for Windows (requires MSYS2/MinGW64)"
 
     exit 1
 }
@@ -151,6 +152,28 @@ build_host_noasm()
     cd "$BUILD_DIR"
 
     ../configure --prefix="$PACKAGE_DIR" --with-pic --disable-fft --disable-assembly &&
+    make -j${NPROC} &&
+    make install
+
+    cd ..
+}
+
+build_windows()
+{
+    PACKAGE_DIR="$GMP_DIR/package"
+    BUILD_DIR=build_windows
+
+    if [ -d "$PACKAGE_DIR" ]; then
+        echo "Windows package is built already. See $PACKAGE_DIR"
+        return 1
+    fi
+
+    rm -rf "$BUILD_DIR"
+    mkdir "$BUILD_DIR"
+    cd "$BUILD_DIR"
+
+    # -std=gnu17 required for GCC 14+/15+ compatibility with GMP configure tests
+    CC=gcc CFLAGS="-O2 -std=gnu17" ../configure --prefix="$PACKAGE_DIR" --with-pic --disable-fft --disable-assembly &&
     make -j${NPROC} &&
     make install
 
@@ -460,6 +483,11 @@ case "$TARGET_PLATFORM" in
     "aarch64" )
         echo "Building for linux aarch64"
         build_aarch64
+    ;;
+
+    "windows" )
+        echo "Building for Windows (MSYS2/MinGW64)"
+        build_windows
     ;;
 
     * )
