@@ -71,7 +71,7 @@ The `windows_x86_64` Makefile target uses these CMake flags:
 | `-DUSE_ASM=NO` | NASM x86_64 assembly not supported on Windows |
 | `-DUSE_OPENMP=OFF` | Not needed, simplifies build |
 | `-DBUILD_TESTS=OFF` | Test binary links pthread which complicates Windows |
-| `-DCMAKE_CXX_FLAGS="-Duint=unsigned -std=c++17"` | `uint` type not defined on Windows |
+| `-DCMAKE_CXX_FLAGS="-Duint=unsigned -std=c++17 -DRAPIDSNARK_SINGLE_THREAD"` | `uint` not defined on Windows; single-threaded to avoid MinGW pthreads shutdown hang |
 | `-DCMAKE_C_FLAGS="-std=gnu17 -Duint=unsigned"` | Same, plus gnu17 for GMP compat |
 | `-DCMAKE_SHARED_LINKER_FLAGS="-static"` | Links libgcc/libstdc++/libwinpthread statically |
 | `-G "MSYS Makefiles"` | Use MSYS make instead of MinGW make |
@@ -104,9 +104,20 @@ msvcrt.dll
 
 No MinGW runtime DLLs required (libgcc, libstdc++, libwinpthread all statically linked).
 
+## Single-threaded mode (RAPIDSNARK_SINGLE_THREAD)
+
+The Windows build defines `-DRAPIDSNARK_SINGLE_THREAD` which forces `ThreadPool::defaultThreadCount()` to return 1 in `depends/ffiasm/c/misc.hpp`. This means no worker threads are created.
+
+**Why this is needed:** The rapidsnark prover uses a `ThreadPool` (in `ffiasm/c/misc.hpp`) that creates `std::thread` workers on first use. On Linux/macOS this is fine — the OS tears down threads on process exit. On Windows with statically-linked MinGW pthreads (`-static`), the `ThreadWorker` destructors run during CRT `atexit` cleanup and call `thread.join()`, which deadlocks because the MinGW pthreads implementation does not support joining threads during static destruction. This prevents the process from exiting.
+
+**Impact:** Proof generation runs single-threaded on Windows. For the commitment circuit (~3,800 constraints), proof time is ~128ms. For larger circuits the difference is more noticeable, but clean process exit is required for .NET test runners and library consumers.
+
+**Linux/macOS builds are unaffected** — they do not define `RAPIDSNARK_SINGLE_THREAD` and use the full thread pool.
+
 ## Verified
 
 - GCC 15.2.0 (MSYS2 MinGW64)
 - GMP 6.3.0 (built from source)
 - `groth16_proof_size` returns 810 (correct Groth16 JSON buffer size)
 - All P/Invoke exports present: `groth16_prover`, `groth16_prover_create`, `groth16_prover_destroy`, `groth16_prover_prove`, `groth16_verify`, `groth16_proof_size`, `groth16_public_size_for_zkey_buf`
+- Process exits cleanly after proof generation (no hung threads)

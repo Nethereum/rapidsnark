@@ -70,7 +70,7 @@ windows_x86_64:
 	rm -rf build_prover_windows_x86_64 && mkdir build_prover_windows_x86_64 && cd build_prover_windows_x86_64 && \
 	cmake .. -G "MSYS Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../package_windows_x86_64 \
 		-DUSE_ASM=NO -DUSE_OPENMP=OFF -DBUILD_TESTS=OFF \
-		-DCMAKE_CXX_FLAGS="-Duint=unsigned -std=c++17" \
+		-DCMAKE_CXX_FLAGS="-Duint=unsigned -std=c++17 -DRAPIDSNARK_SINGLE_THREAD" \
 		-DCMAKE_C_FLAGS="-std=gnu17 -Duint=unsigned" \
 		-DCMAKE_SHARED_LINKER_FLAGS="-static-libgcc -static-libstdc++ -static" && \
 	make -j$$(nproc) && make install
